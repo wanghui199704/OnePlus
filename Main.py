@@ -5,6 +5,7 @@ import time
 import openpyxl
 import datetime
 import random
+import traceback
 
 logFile = open("./log",'w',encoding='utf-8')
 
@@ -26,6 +27,7 @@ def login():
         logFile.write("登录成功\n")
         return
     except:
+        logFile.write("login异常："+traceback.print_exc())
         logFile.write("登录失败\n")
         exit(0)
 
@@ -55,13 +57,15 @@ def write():
 
         workbook.save("绩效数据"+str(random.randint(0,1000))+".xlsx")
     except:
+        logFile.write("write异常："+traceback.print_exc())
+        logFile.write("\n")
         logFile.write("写入报表失败，查看是否同名文件未关闭\n")
 
 
 
 
 
-def parse(id='255527',num =6):
+def parse(id='255527',num =8):
     result = []
     try:
         url ="https://www.oneplusbbs.com/home.php?mod=space&uid="+id+"&do=thread&view=me&from=space&type=thread"
@@ -72,8 +76,7 @@ def parse(id='255527',num =6):
             while "id.oneplus.com" in driver.current_url:
                 time.sleep(10)
 
-        logFile.write("开始解析\n")
-        driver.get(url)
+        logFile.write("\n开始解析\n")
 
         table = driver.find_element_by_xpath('//*[@id="delform"]/table')
         trlist=table.find_elements_by_tag_name('tr')
@@ -84,15 +87,12 @@ def parse(id='255527',num =6):
             titleUrl=th.get_attribute("href")
             replyNum = nums[0]
             readNum =nums[1]
-            isTime,createTime =  isInTime(titleUrl)
             logFile.write(id + " " + title + " " + titleUrl + " " + replyNum + " " + readNum + "\n")
-            if isTime==False:
-                logFile.write("不在时间范围内\n")
-                break
-            logFile.write(createTime+"\n")
-            result.append([id,title,titleUrl,readNum,readNum,createTime])
+            result.append([id,title,titleUrl,readNum,readNum])
         return result
     except:
+        logFile.write("parse异常："+traceback.print_exc())
+        logFile.write("\n")
         return result
 
 
@@ -104,7 +104,7 @@ def isInTime(url):
         createTime = driver.find_element_by_xpath('//*[@class="authi"]/em').text.replace("发表于","").strip()
 
     createData = datetime.datetime.strptime(createTime, '%Y-%m-%d %H:%M:%S')
-    if createData > beginData and createData < endData:
+    if createData >= beginData and createData <= endData:
         return True,createTime
     else:
         return False,None
@@ -133,6 +133,13 @@ if __name__ == '__main__':
 
     total = []
     for i in id2name.keys():
-        total+= parse(str(i))
+        for j in parse(str(i)):
+            isTime, createTime = isInTime(j[2])
+            if isTime==False:
+                logFile.write("不在时间范围内\n")
+                break
+            logFile.write(createTime+"\n")
+            j.append(createTime)
+            total.append(j)
     write()
     logFile.close()
