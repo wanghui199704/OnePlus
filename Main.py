@@ -45,8 +45,8 @@ def write():
         sheet['A1'] = "id"
         sheet['B1'] = "社区名称"
         sheet['C1'] = "标题"
-        sheet['D1'] = "浏览量"
-        sheet['E1'] = "评论量"
+        sheet['D1'] = "回复量"
+        sheet['E1'] = "浏览量"
         sheet['F1'] = "发表时间"
         for i in total:
             link ='=HYPERLINK("'+i[2]+'","'+i[1]+'")'
@@ -83,7 +83,7 @@ def parse(id='255527',num =8):
             replyNum = nums[0]
             readNum =nums[1]
             logFile.write(id + " " + title + " " + titleUrl + " " + replyNum + " " + readNum + "\n")
-            result.append([id,title,titleUrl,readNum,readNum])
+            result.append([id,title,titleUrl,replyNum,readNum])
         return result
     except:
         return result
@@ -92,11 +92,11 @@ def parse(id='255527',num =8):
 def isInTime(url):
     driver.get(url)
     try:
-        try:
-            createTime = driver.find_element_by_xpath('//*[@class="authi"]/em/span').get_attribute("title").strip()
-        except:
-            createTime = driver.find_element_by_xpath('//*[@class="authi"]/em').text.replace("发表于","").strip()
-
+        em = driver.find_element_by_xpath('//*[@class="authi"]/em')
+        if em.find_element_by_css_selector("span"):
+            createTime =em.find_element_by_css_selector("span").get_attribute("title").strip()
+        else:
+            createTime =em.text.replace("发表于","").strip()
         createData = datetime.datetime.strptime(createTime, '%Y-%m-%d %H:%M:%S')
         if createData >= beginData and createData <= endData:
             return True,createTime
@@ -139,3 +139,4 @@ if __name__ == '__main__':
             total.append(j)
     write()
     logFile.close()
+    driver.quit()
