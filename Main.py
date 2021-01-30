@@ -69,8 +69,11 @@ def parse(id='255527',num =6):
         if "id.oneplus.com" in driver.current_url:
             logFile.write("需要登录\n")
             login()
-            time.sleep(10)
-            driver.get(url)
+            while "id.oneplus.com" in driver.current_url:
+                time.sleep(10)
+
+        logFile.write("开始解析\n")
+        driver.get(url)
 
         table = driver.find_element_by_xpath('//*[@id="delform"]/table')
         trlist=table.find_elements_by_tag_name('tr')
