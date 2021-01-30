@@ -5,7 +5,6 @@ import time
 import openpyxl
 import datetime
 import random
-import traceback
 
 logFile = open("./log",'w',encoding='utf-8')
 
@@ -27,8 +26,6 @@ def login():
         logFile.write("登录成功\n")
         return
     except:
-        logFile.write("login异常："+traceback.print_exc())
-        logFile.write("登录失败\n")
         exit(0)
 
 def read_ids():
@@ -57,8 +54,6 @@ def write():
 
         workbook.save("绩效数据"+str(random.randint(0,1000))+".xlsx")
     except:
-        logFile.write("write异常："+traceback.print_exc())
-        logFile.write("\n")
         logFile.write("写入报表失败，查看是否同名文件未关闭\n")
 
 
@@ -91,23 +86,24 @@ def parse(id='255527',num =8):
             result.append([id,title,titleUrl,readNum,readNum])
         return result
     except:
-        logFile.write("parse异常："+traceback.print_exc())
-        logFile.write("\n")
         return result
 
 
 def isInTime(url):
     driver.get(url)
     try:
-        createTime = driver.find_element_by_xpath('//*[@class="authi"]/em/span').get_attribute("title").strip()
-    except:
-        createTime = driver.find_element_by_xpath('//*[@class="authi"]/em').text.replace("发表于","").strip()
+        try:
+            createTime = driver.find_element_by_xpath('//*[@class="authi"]/em/span').get_attribute("title").strip()
+        except:
+            createTime = driver.find_element_by_xpath('//*[@class="authi"]/em').text.replace("发表于","").strip()
 
-    createData = datetime.datetime.strptime(createTime, '%Y-%m-%d %H:%M:%S')
-    if createData >= beginData and createData <= endData:
-        return True,createTime
-    else:
-        return False,None
+        createData = datetime.datetime.strptime(createTime, '%Y-%m-%d %H:%M:%S')
+        if createData >= beginData and createData <= endData:
+            return True,createTime
+        else:
+            return False,None
+    except:
+        return False, None
 
 def readFile():
     file = open("input.txt",'r',encoding='utf-8')
